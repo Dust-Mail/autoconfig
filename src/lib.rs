@@ -1,7 +1,6 @@
-use dust_mail_utils::validate_email;
-
 use http::Client;
 use types::{config::Config, Result};
+use utils::validate_email;
 
 mod http;
 mod parse;
