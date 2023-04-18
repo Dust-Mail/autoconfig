@@ -76,7 +76,7 @@ impl Client {
         };
     }
 
-    pub async fn request_urls(&self, urls: Vec<String>) -> Option<String> {
+    pub async fn request_urls<I: IntoIterator<Item = String>>(&self, urls: I) -> Option<String> {
         let request_futures = urls.into_iter().map(|url| self.get_xml(url));
 
         let results = join_all(request_futures).await;

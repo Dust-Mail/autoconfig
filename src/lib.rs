@@ -1,3 +1,47 @@
+//!
+//! A simple implementation of Mozilla Thunderbird's autoconfig (https://wiki.mozilla.org/Thunderbird:Autoconfiguration) in Rust.
+//!
+//! Useful if a user needs to fill in their mail server configuration, but are not tech savy enough to do so or just for general convenience of not having to manually fill anything in.
+//!
+//! # Usage
+//!
+//! You can request a config by simply calling the `from_addr` function:
+//!
+//! ```rust
+//!
+//! extern crate autoconfig;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let config = autoconfig::from_addr("test@gmail.com").await.unwrap();
+//!
+//!     println!("{}", config.email_provider().id())
+//!     
+//!     // Outputs:
+//!     // "googlemail.com"
+//! }
+//!
+//! ```
+//!
+//! You can also achieve the same thing but from just a domain name:
+//!
+//! ```rust
+//!
+//! extern crate autoconfig;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let config = autoconfig::from_domain("gmail.com").await.unwrap();
+//!
+//!     println!("{}", config.email_provider().id())
+//!     
+//!     // Outputs:
+//!     // "googlemail.com"
+//! }
+//!
+//! ```
+//!
+
 use http::Client;
 use types::{config::Config, Result};
 use utils::validate_email;
@@ -40,7 +84,7 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Option<Config>> {
     }
 }
 
-/// Given an email address, try to connect to the email providers autoconfig servers and return the config that was found.
+/// Given an email address, try to connect to the email providers autoconfig servers and return the config that was found, if one was found.
 pub async fn from_addr(email_address: &str) -> Result<Option<Config>> {
     if !validate_email(email_address) {
         return Err(types::Error::new(
