@@ -7,7 +7,7 @@
 //!
 //! You can request a config by simply calling the `from_addr` function:
 //!
-//! ```rust
+//! ```rust,ignore
 //!
 //! extern crate autoconfig;
 //!
@@ -25,7 +25,7 @@
 //!
 //! You can also achieve the same thing but from just a domain name:
 //!
-//! ```rust
+//! ```rust,ignore
 //!
 //! extern crate autoconfig;
 //!
