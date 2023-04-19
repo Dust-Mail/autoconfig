@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - '[0-9]+.*' # Match any tag with the format vMAJOR.MINOR.PATCH
+      - 'v*.*.*' # Match any tag with the format vMAJOR.MINOR.PATCH
 
 jobs:
   release:
@@ -48,7 +48,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
