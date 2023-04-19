@@ -2,6 +2,9 @@
 name = "autoconfig"
 authors = ["Guus van Meerveld"]
 description = "A simple implementation of Mozilla Thunderbird's autoconfig"
+license = "MIT"
+documentation = "https://docs.dust.email/packages/autoconfig"
+repository = "https://github.com/Dust-Mail/autoconfig"
 readme = "README.md"
 version = "0.2.0"
 edition = "2021"
