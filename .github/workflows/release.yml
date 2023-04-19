@@ -33,9 +33,6 @@ jobs:
       - name: Fetch
         run: cargo fetch --locked
       
-      - name: Build
-        run: cargo build
-
       - name: Test
         run: cargo test
 
