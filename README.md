@@ -1,5 +1,8 @@
 # Autoconfig
 
+![Crates.io (latest)](https://img.shields.io/crates/dv/autoconfig)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dust-mail/autoconfig/test.yml)
+
 A simple implementation of [Mozilla Thunderbird's autoconfig](https://wiki.mozilla.org/Thunderbird:Autoconfiguration) in Rust.
 
 Useful if a user needs to fill in their mail server configuration, but are not tech savy enough to do so or just for general convenience of not having to manually fill anything in.
