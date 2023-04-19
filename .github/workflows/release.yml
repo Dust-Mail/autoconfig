@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*' # Match any tag with the format vMAJOR.MINOR.PATCH
+      - '[0-9]+.*' # Match any tag with the format vMAJOR.MINOR.PATCH
 
 jobs:
   release:
