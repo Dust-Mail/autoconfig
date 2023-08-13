@@ -43,7 +43,7 @@
 //!
 
 use http::Client;
-use types::{config::Config, Result};
+use types::{config::Config, Error, ErrorKind, Result};
 use utils::validate_email;
 
 mod http;
@@ -54,7 +54,7 @@ mod utils;
 const AT_SYMBOL: char = '@';
 
 /// Given an email providers domain, try to connect to autoconfig servers for that provider and return the config.
-pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Option<Config>> {
+pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
     let client = Client::new()?;
 
     let urls = vec![
@@ -78,14 +78,17 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Option<Config>> {
         Some(config_unparsed) => {
             let config = parse::from_str(&config_unparsed)?;
 
-            Ok(Some(config))
+            Ok(config)
         }
-        None => Ok(None),
+        None => Err(Error::new(
+            ErrorKind::NotFound,
+            "Could not find a valid config",
+        )),
     }
 }
 
 /// Given an email address, try to connect to the email providers autoconfig servers and return the config that was found, if one was found.
-pub async fn from_addr(email_address: &str) -> Result<Option<Config>> {
+pub async fn from_addr(email_address: &str) -> Result<Config> {
     if !validate_email(email_address) {
         return Err(types::Error::new(
             types::ErrorKind::BadInput,
