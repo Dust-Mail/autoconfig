@@ -1,11 +1,15 @@
 use std::{error, fmt, result};
 
+use trust_dns_resolver::error::ResolveError;
+
 #[derive(Debug)]
 pub enum ErrorKind {
     Http(reqwest::Error),
     InvalidResponse,
     Timeout,
     BadInput,
+    NoRecordsFound,
+    Resolve(ResolveError),
     NotFound(Vec<Error>),
     ParseXml(serde_xml_rs::Error),
 }
@@ -45,6 +49,12 @@ impl From<reqwest::Error> for Error {
 impl From<serde_xml_rs::Error> for Error {
     fn from(error: serde_xml_rs::Error) -> Self {
         Self::new(ErrorKind::ParseXml(error), "Error parsing XML response")
+    }
+}
+
+impl From<ResolveError> for Error {
+    fn from(error: ResolveError) -> Self {
+        Self::new(ErrorKind::Resolve(error), "Error resolving dns")
     }
 }
 

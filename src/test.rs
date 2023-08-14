@@ -7,6 +7,8 @@ pub async fn from_domain() {
     addresses.insert("outlook.com", "outlook.com");
     addresses.insert("gmail.com", "googlemail.com");
     addresses.insert("yahoo.com", "yahoo.com");
+    addresses.insert("guusvanmeerveld.dev", "guusvanmeerveld.dev");
+    addresses.insert("live.nl", "hotmail.com");
 
     for (addr, id) in addresses.iter() {
         let config = super::from_domain(addr).await.unwrap();

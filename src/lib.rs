@@ -43,11 +43,12 @@
 //!
 
 use client::Client;
-use futures::future::join_all;
+use futures::{future::select_ok, FutureExt};
 use utils::validate_email;
 
 mod client;
 pub mod config;
+mod dns;
 pub mod error;
 mod http;
 mod parse;
@@ -60,6 +61,23 @@ use error::{Error, ErrorKind, Result};
 
 /// Given an email providers domain, try to connect to autoconfig servers for that provider and return the config.
 pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
+    let mut errors: Vec<_> = Vec::new();
+
+    let client = Client::new()?;
+
+    let mut futures = Vec::new();
+
+    match client.get_url_from_txt(domain.as_ref()).await {
+        Ok(urls) => {
+            for url in urls {
+                let future = client.get_config(url);
+
+                futures.push(future.boxed());
+            }
+        }
+        Err(error) => errors.push(error),
+    };
+
     let urls = vec![
         // Try connect to connect with the users mail server directly
         format!("http://autoconfig.{}/mail/config-v1.1.xml", domain.as_ref()),
@@ -75,25 +93,17 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
         ),
     ];
 
-    let client = Client::new()?;
-
-    let mut futures = Vec::new();
-
     for url in urls {
         let future = client.get_config(url);
 
-        futures.push(future);
+        futures.push(future.boxed());
     }
 
-    let results = join_all(futures).await;
+    let result = select_ok(futures).await;
 
-    let mut errors: Vec<_> = Vec::new();
-
-    for result in results {
-        match result {
-            Ok(config) => return Ok(config),
-            Err(error) => errors.push(error),
-        }
+    match result {
+        Ok((config, _remaining)) => return Ok(config),
+        Err(error) => errors.push(error),
     }
 
     Err(Error::new(
