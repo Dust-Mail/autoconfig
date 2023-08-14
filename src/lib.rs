@@ -42,21 +42,24 @@
 //! ```
 //!
 
-use http::Client;
-use types::{config::Config, Error, ErrorKind, Result};
+use client::Client;
+use futures::future::join_all;
 use utils::validate_email;
 
+mod client;
+pub mod config;
+pub mod error;
 mod http;
 mod parse;
-pub mod types;
 mod utils;
 
 const AT_SYMBOL: char = '@';
 
+use config::Config;
+use error::{Error, ErrorKind, Result};
+
 /// Given an email providers domain, try to connect to autoconfig servers for that provider and return the config.
 pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
-    let client = Client::new()?;
-
     let urls = vec![
         // Try connect to connect with the users mail server directly
         format!("http://autoconfig.{}/mail/config-v1.1.xml", domain.as_ref()),
@@ -72,26 +75,38 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
         ),
     ];
 
-    let config_unparsed: Option<String> = client.request_urls(urls).await;
+    let client = Client::new()?;
 
-    match config_unparsed {
-        Some(config_unparsed) => {
-            let config = parse::from_str(&config_unparsed)?;
+    let mut futures = Vec::new();
 
-            Ok(config)
-        }
-        None => Err(Error::new(
-            ErrorKind::NotFound,
-            "Could not find a valid config",
-        )),
+    for url in urls {
+        let future = client.get_config(url);
+
+        futures.push(future);
     }
+
+    let results = join_all(futures).await;
+
+    let mut errors: Vec<_> = Vec::new();
+
+    for result in results {
+        match result {
+            Ok(config) => return Ok(config),
+            Err(error) => errors.push(error),
+        }
+    }
+
+    Err(Error::new(
+        ErrorKind::NotFound(errors),
+        "Could not find a valid config",
+    ))
 }
 
 /// Given an email address, try to connect to the email providers autoconfig servers and return the config that was found, if one was found.
 pub async fn from_addr(email_address: &str) -> Result<Config> {
     if !validate_email(email_address) {
-        return Err(types::Error::new(
-            types::ErrorKind::BadInput,
+        return Err(Error::new(
+            ErrorKind::BadInput,
             "Given email address is invalid",
         ));
     };
@@ -104,8 +119,8 @@ pub async fn from_addr(email_address: &str) -> Result<Config> {
     let domain = match split.next() {
         Some(domain) => domain,
         None => {
-            return Err(types::Error::new(
-                types::ErrorKind::BadInput,
+            return Err(Error::new(
+                ErrorKind::BadInput,
                 "An email address must specify a domain after the '@' symbol",
             ))
         }

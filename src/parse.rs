@@ -1,10 +1,13 @@
-use crate::types::{self, config::Config};
+use std::io;
 
 use serde_xml_rs;
 
-pub fn from_str(string: &str) -> types::Result<Config> {
-    let config: Config = serde_xml_rs::from_str(string)
-        .map_err(|e| types::Error::new(types::ErrorKind::Parse, e.to_string()))?;
+use crate::{config::Config, error::Result};
+
+pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<Config> {
+    let reader = io::Cursor::new(bytes.as_ref());
+
+    let config: Config = serde_xml_rs::from_reader(reader)?;
 
     Ok(config)
 }
@@ -62,6 +65,6 @@ mod tests {
             </clientConfig>
         "#;
 
-        super::from_str(mock_config).unwrap();
+        super::from_bytes(mock_config).unwrap();
     }
 }

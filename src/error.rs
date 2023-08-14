@@ -1,5 +1,3 @@
-pub mod config;
-
 use std::{error, fmt, result};
 
 #[derive(Debug)]
@@ -8,8 +6,8 @@ pub enum ErrorKind {
     InvalidResponse,
     Timeout,
     BadInput,
-    NotFound,
-    Parse,
+    NotFound(Vec<Error>),
+    ParseXml(serde_xml_rs::Error),
 }
 
 #[derive(Debug)]
@@ -41,6 +39,12 @@ impl From<reqwest::Error> for Error {
             ErrorKind::Http(http_error),
             "Error with outgoing http request",
         )
+    }
+}
+
+impl From<serde_xml_rs::Error> for Error {
+    fn from(error: serde_xml_rs::Error) -> Self {
+        Self::new(ErrorKind::ParseXml(error), "Error parsing XML response")
     }
 }
 

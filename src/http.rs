@@ -1,15 +1,15 @@
 use std::time::Duration;
 
-use crate::types::{Error, ErrorKind, Result};
+use crate::error::{Error, ErrorKind, Result};
 
-use futures::future::join_all;
+use bytes::Bytes;
 use reqwest::{redirect, Client as HttpClient};
 
-pub struct Client {
+pub struct Http {
     client: HttpClient,
 }
 
-impl Client {
+impl Http {
     const TIMEOUT: Duration = Duration::from_secs(10);
     const MAX_REDIRECTS: usize = 10;
     /// The accepted content types for an xml response
@@ -27,8 +27,8 @@ impl Client {
     }
 
     /// Fetches a given url and returns the XML response (if there is one)
-    async fn get_xml<S: Into<String>>(&self, uri: S) -> Result<String> {
-        let response = self.client.get(uri.into()).send().await?;
+    pub async fn get_xml<S: AsRef<str>>(&self, uri: S) -> Result<Bytes> {
+        let response = self.client.get(uri.as_ref()).send().await?;
 
         // Get the Content-Type header, error if it doesn't exist
         let content_type = match response.headers().get("content-type") {
@@ -61,34 +61,17 @@ impl Client {
         // Get the http message body
         let bytes = response.bytes().await?;
 
-        // Convert the body to a string
-        let body = String::from_utf8(bytes.to_vec())
-            .map_err(|_| Error::new(ErrorKind::InvalidResponse, "Response is not valid utf-8"))?;
-
         // If we got an error response we return an error
         if !is_success {
             return Err(Error::new(
                 ErrorKind::InvalidResponse,
-                format!("Http request failed: {}", body),
+                format!(
+                    "Http request failed: {}",
+                    String::from_utf8(bytes.into()).unwrap()
+                ),
             ));
         } else {
-            return Ok(body);
+            return Ok(bytes);
         };
-    }
-
-    pub async fn request_urls<I: IntoIterator<Item = String>>(&self, urls: I) -> Option<String> {
-        let request_futures = urls.into_iter().map(|url| self.get_xml(url));
-
-        let results = join_all(request_futures).await;
-
-        for result in results {
-            match result {
-                Ok(response) => return Some(response),
-                Err(_) => {}
-            }
-        }
-
-        // Return nothing if all of the requests failed
-        return None;
     }
 }
