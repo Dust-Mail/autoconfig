@@ -67,18 +67,7 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
 
     let mut futures = Vec::new();
 
-    match client.get_url_from_txt(domain.as_ref()).await {
-        Ok(urls) => {
-            for url in urls {
-                let future = client.get_config(url);
-
-                futures.push(future.boxed());
-            }
-        }
-        Err(error) => errors.push(error),
-    };
-
-    let urls = vec![
+    let mut urls = vec![
         // Try connect to connect with the users mail server directly
         format!("http://autoconfig.{}/mail/config-v1.1.xml", domain.as_ref()),
         // The fallback url
@@ -92,6 +81,18 @@ pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
             domain.as_ref()
         ),
     ];
+
+    match client.get_url_from_txt(domain.as_ref()).await {
+        Ok(txt_urls) => {
+            for url in txt_urls {
+                urls.push(url)
+            }
+        }
+        Err(error) => errors.push(error),
+    };
+
+    urls.sort();
+    urls.dedup();
 
     for url in urls {
         let future = client.get_config(url);
