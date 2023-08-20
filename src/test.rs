@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-#[async_std::test]
+#[cfg_attr(feature = "runtime-tokio", tokio::test)]
+#[cfg_attr(feature = "runtime-async-std", async_std::test)]
 pub async fn from_domain() {
     let mut addresses = HashMap::new();
 
