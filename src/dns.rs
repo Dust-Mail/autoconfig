@@ -1,13 +1,24 @@
 use std::cmp::Ordering;
 
 use bytes::Bytes;
+
+use trust_dns_resolver::config::ResolverConfig;
+
+#[cfg(feature = "runtime-tokio")]
+use trust_dns_resolver::TokioAsyncResolver;
+
+#[cfg(feature = "runtime-async-std")]
+use async_std_resolver::{resolver, AsyncStdResolver};
+
 use trust_dns_proto::rr::rdata::MX;
-use trust_dns_resolver::{config::ResolverConfig, TokioAsyncResolver};
 
 use crate::error::Result;
 
 pub struct Dns {
+    #[cfg(feature = "runtime-tokio")]
     resolver: TokioAsyncResolver,
+    #[cfg(feature = "runtime-async-std")]
+    resolver: AsyncStdResolver,
 }
 
 pub struct SortableMX {
@@ -35,8 +46,12 @@ impl PartialEq for SortableMX {
 }
 
 impl Dns {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
+        #[cfg(feature = "runtime-tokio")]
         let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), Default::default())?;
+
+        #[cfg(feature = "runtime-async-std")]
+        let resolver = resolver(ResolverConfig::default(), Default::default()).await?;
 
         let dns = Self { resolver };
 

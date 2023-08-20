@@ -4,7 +4,8 @@ use trust_dns_resolver::error::ResolveError;
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    Http(reqwest::Error),
+    Surf(surf::Error),
+    BuildHttpClient,
     InvalidResponse,
     Timeout,
     BadInput,
@@ -37,12 +38,9 @@ impl Error {
     }
 }
 
-impl From<reqwest::Error> for Error {
-    fn from(http_error: reqwest::Error) -> Self {
-        Self::new(
-            ErrorKind::Http(http_error),
-            "Error with outgoing http request",
-        )
+impl From<surf::Error> for Error {
+    fn from(error: surf::Error) -> Self {
+        Self::new(ErrorKind::Surf(error), "Failed to create http request")
     }
 }
 

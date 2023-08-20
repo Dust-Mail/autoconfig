@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[tokio::test]
+#[async_std::test]
 pub async fn from_domain() {
     let mut addresses = HashMap::new();
 

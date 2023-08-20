@@ -1,5 +1,5 @@
 use regex::Regex;
-use reqwest::Url;
+use surf::Url;
 
 use crate::{config::Config, dns::Dns, error::Result, http::Http, parse};
 
@@ -9,16 +9,16 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let http = Http::new()?;
-        let dns = Dns::new()?;
+        let dns = Dns::new().await?;
         let client = Self { http, dns };
 
         Ok(client)
     }
 
     pub async fn get_config<U: AsRef<str>>(&self, url: U) -> Result<Config> {
-        let bytes = self.http.get_xml(url).await?;
+        let bytes = self.http.get(url).await?;
 
         let config = parse::from_bytes(bytes)?;
 

@@ -63,7 +63,7 @@ use error::{Error, ErrorKind, Result};
 pub async fn from_domain<D: AsRef<str>>(domain: D) -> Result<Config> {
     let mut errors: Vec<_> = Vec::new();
 
-    let client = Client::new()?;
+    let client = Client::new().await?;
 
     let mut futures = Vec::new();
 
