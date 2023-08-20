@@ -42,5 +42,8 @@ jobs:
       - name: Build
         run: cargo build
 
-      - name: Test
-        run: cargo test
+      - name: Test Tokio
+        run: cargo test --no-default-features --features runtime-tokio
+      
+      - name: Test Async-std
+        run: cargo test --no-default-features --features runtime-async-std
