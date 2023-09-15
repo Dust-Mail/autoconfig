@@ -6,7 +6,7 @@ license = "MIT"
 documentation = "https://docs.dust.email/packages/autoconfig"
 repository = "https://github.com/Dust-Mail/autoconfig"
 readme = "README.md"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 
 rust-version = "1.65.0"
